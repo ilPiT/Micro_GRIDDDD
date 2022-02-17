@@ -1,5 +1,5 @@
 param: Periods := 8760;                                     # Periods considered in one year (8760h/y in the example)
-param: Years := 2;                                         # Total duration of the project
+param: Years := 3;                                         # Total duration of the project
 param: Step_Duration := 20;                                 # Duration (in years) of each investment decision step in which the project lifetime will be split
 param: Min_Last_Step_Duration := 1;                         # Minimum duration (in years) of the last investment decision step, in case of non-homogeneous divisions of the project lifetime 
 param: StartDate := '01/01/2019 00:00:00';                  # Start date of the project
