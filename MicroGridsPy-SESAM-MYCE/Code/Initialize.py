@@ -81,9 +81,64 @@ def Initialize_YearUpgrade_Tuples(model):
     print('\nTime horizon (year,investment-step): ' + str(yu_tuples_list))
     return yu_tuples_list
 
+#%% Time resolution adjusting process + creating the 20 years demand curve
+
+
+data30 = pd.read_csv('C:/Users/pietr/Spyder/RAMP_spyder/results/output_file_1.csv', index_col=0)
+data31 = pd.DataFrame(data30)
+data31 = data31.append(data30[0:1440])
+index30 = pd.date_range(start='2016-01-01 00:00:00',periods = len(data30), 
+                                   freq=('1min'))
+index31 = pd.date_range(start='2016-01-01 00:00:00',periods = len(data31), 
+                                   freq=('1min'))
+
+
+
+
+data30.index30 = index30
+data31.index31 = index31
+
+data30['day']  = data30.index30.dayofyear
+data31['day']  = data31.index31.dayofyear
+data30['hour'] = data30.index30.hour
+data31['hour'] = data31.index31.hour
+Demand_adjusted30 = data30.groupby(['day', 'hour']).mean()
+Demand_adjusted31 = data31.groupby(['day', 'hour']).mean()
+
+Demand_30 = pd.DataFrame()
+Demand_31 = pd.DataFrame()
+
+for i in range(1,7+1):
+
+    Demand_30 = pd.concat([Demand_adjusted30,Demand_30], axis=0)
+    
+for i in range(1,5+1):
+    Demand_31 = pd.concat([Demand_adjusted31,Demand_31], axis=0)
+
+
+Demand = pd.DataFrame()
+Demand = pd.concat([Demand_31, Demand_30], axis=0)
+
+Demand_20years =pd.DataFrame()
+
+
+for i in range(1,20+1):
+    Demand_20years =pd.concat([Demand_20years, Demand],axis=1)
+
+index = list(range(1,8760+1))
+Demand_20years.index = index
+
+years = list(range(1,20+1))
+Demand_20years.columns = years
+print(type(years))
+
+Demand_20years.to_excel('C:/Users/pietr/Spyder/RAMP_spyder/results/Demand_20years.xlsx')
+
+#Demand_final = pd.read_excel('C:/Users/pietr/Spyder/RAMP_spyder/results/Demand_20years.xlsx',index_col=0)
+
 
 #%% This section imports the multi-year Demand and Renewable-Energy output and creates a Multi-indexed DataFrame for it
-Demand = pd.read_excel('Inputs/Demand.xls', index_col=0)
+Demand = pd.read_excel('C:/Users/pietr/Spyder/RAMP_spyder/results/Demand_20years.xlsx',index_col=0)
 Energy_Demand_Series = pd.Series()
 for i in range(1,n_years*n_scenarios+1):
     dum = Demand[i][:]
@@ -105,9 +160,46 @@ Energy_Demand_2.index = index_2
 def Initialize_Demand(model, s, y, t):
     return float(Energy_Demand[0][(s,y,t)])
 
-Renewable_Energy = pd.read_excel('Inputs/Renewable_Energy.xls',index_col=0)
+
+#%% PV initializing
+'''
+import pandas as pd
+
+ninja = pd.read_csv('C:/Users/pietr/Spyder/Micro_GRIDDDD.git/MicroGridsPy-SESAM-MYCE/Code/Inputs/ninja_pv.csv', header=None,index_col=0)# ricorda che qua ho dovuto eliminare manualmente le prime tre righe per farlo leggere come CSV
+
+a = ninja.iloc[0:,1]*1000 #questa è la lista dei valori in Watt
+
+df = pd.DataFrame(a)
+columns = [1]
+df.columns = columns
+index = list(range(1,8761))
+df.index = index
+
+
+df.to_excel('C:/Users/pietr/Spyder/Micro_GRIDDDD.git/MicroGridsPy-SESAM-MYCE/Code/Inputs/PV.xlsx')
+'''
+
+#%% How to deal with different time zones
+'''
+
+fuso = 5
+
+for i in range(1,fuso):
+    df.loc[i, [1]] = df.loc[8755+i,[1]]
+    df.loc[8755+i,[1]] = df.loc[i, [1]]
+'''
+
+     #Renewable_Energy = pd.read_excel('C:/Users/pietr/Spyder/Micro_GRIDDDD.git/MicroGridsPy-SESAM-MYCE/Code/Inputs/PV.xlsx',index_col=0)
+Renewable_Energy = pd.read_excel('Inputs/PV.xlsx',index_col=0)
+#columns_RES = [1,2]
+#Renewable_Energy.columns = columns_RES   
+#Renewable_Energy[1] = df[1]
+
+     #Renewable_Energy['PV'] = df['PV']
+
 def Initialize_RES_Energy(model,s,r,t):
     column = (s-1)*model.RES_Sources + r 
+    
     return float(Renewable_Energy[column][t])   
 
 
